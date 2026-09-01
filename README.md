@@ -29,6 +29,11 @@ hidden lore, or runtime Git authentication.
 
 Public reader: <https://wratixor.github.io/hexrelatum/>
 
+The repository also carries a separate public Geno-Dice lore corpus at
+`lor/wiki/`. It uses the same reader and opens at
+<https://wratixor.github.io/hexrelatum/lor/> without mixing its fantasy axes
+into the engine's general-knowledge demonstration.
+
 ## Local use
 
 Requires Python 3.11 or newer. Node.js is useful only for the optional JavaScript
@@ -36,15 +41,18 @@ syntax check.
 
 ```powershell
 python tools/build_index.py
+python tools/build_index.py --corpus lor
 python -m http.server 8765
 ```
 
 Then open `http://127.0.0.1:8765/web/`.
+The lore corpus opens at `http://127.0.0.1:8765/lor/`.
 
 Run all dependency-free checks:
 
 ```powershell
 python tools/build_index.py --check
+python tools/build_index.py --corpus lor --check
 python -m unittest discover -s tests -v
 python -m compileall -q tools tests
 node --check web/app.js
@@ -91,6 +99,7 @@ engine contract     schema/
 reference indexer   tools/
 static reader       web/
 all public knowledge wiki/
+optional public corpus lor/wiki/ and lor/public/
 wiki axis semantics wiki.config.json
 generated indexes   public/
 validation           tests/ and .github/workflows/

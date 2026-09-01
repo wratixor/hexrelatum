@@ -176,8 +176,12 @@ def collect_articles(wiki_root: Path) -> tuple[list[Article], dict[Path, Article
     return articles, by_path
 
 
-def build_payload(repository_root: Path) -> tuple[dict[str, object], list[tuple[str, str, str, str]], list[tuple[str, str, str]]]:
-    wiki_root = repository_root / "wiki"
+def build_payload(
+    repository_root: Path,
+    source_root: Path | None = None,
+) -> tuple[dict[str, object], list[tuple[str, str, str, str]], list[tuple[str, str, str]]]:
+    source_root = repository_root if source_root is None else source_root
+    wiki_root = source_root / "wiki"
     articles, by_path = collect_articles(wiki_root)
     by_id = {article.id: article for article in articles}
 
@@ -204,9 +208,9 @@ def build_payload(repository_root: Path) -> tuple[dict[str, object], list[tuple[
             incoming[target.id].add(article.id)
             directed_links.add((article.id, target.id, label.strip(), href))
 
-    provenance = json.loads((repository_root / "provenance.json").read_text(encoding="utf-8"))
+    provenance = json.loads((source_root / "provenance.json").read_text(encoding="utf-8"))
     engine_version = (repository_root / "VERSION").read_text(encoding="utf-8").strip()
-    axis_semantics_version, axes = load_axes(repository_root)
+    axis_semantics_version, axes = load_axes(source_root)
     home_id = next(article.id for article in articles if article.home)
 
     concepts: list[dict[str, object]] = []
@@ -334,8 +338,8 @@ def write_sqlite(
         connection.close()
 
 
-def build(repository_root: Path, output_dir: Path) -> None:
-    payload, directed_links, external_links = build_payload(repository_root)
+def build(repository_root: Path, output_dir: Path, source_root: Path | None = None) -> None:
+    payload, directed_links, external_links = build_payload(repository_root, source_root)
     output_dir.mkdir(parents=True, exist_ok=True)
     write_json(payload, output_dir / "index.json")
     write_sqlite(payload, directed_links, external_links, output_dir / "index.sqlite3")
@@ -349,14 +353,14 @@ def sqlite_dump(path: Path) -> str:
         connection.close()
 
 
-def check(repository_root: Path, output_dir: Path) -> None:
+def check(repository_root: Path, output_dir: Path, source_root: Path | None = None) -> None:
     expected_json = output_dir / "index.json"
     expected_sqlite = output_dir / "index.sqlite3"
     if not expected_json.exists() or not expected_sqlite.exists():
         raise IndexBuildError("generated indexes are missing; run tools/build_index.py")
     with tempfile.TemporaryDirectory(prefix="hexrelatum-index-") as temporary:
         rebuilt = Path(temporary)
-        build(repository_root, rebuilt)
+        build(repository_root, rebuilt, source_root)
         if rebuilt.joinpath("index.json").read_bytes() != expected_json.read_bytes():
             raise IndexBuildError("public/index.json is stale; rebuild and commit it")
         if sqlite_dump(rebuilt / "index.sqlite3") != sqlite_dump(expected_sqlite):
@@ -366,18 +370,26 @@ def check(repository_root: Path, output_dir: Path) -> None:
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="verify committed indexes")
+    parser.add_argument(
+        "--corpus",
+        help="build a public top-level corpus such as 'lor' instead of the default wiki",
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
     repository_root = Path(__file__).resolve().parents[1]
-    output_dir = repository_root / "public"
+    if args.corpus and not ID_PATTERN.fullmatch(args.corpus):
+        print("index build failed: corpus must be a stable lowercase-hyphen id", file=sys.stderr)
+        return 1
+    source_root = repository_root / args.corpus if args.corpus else repository_root
+    output_dir = source_root / "public"
     try:
         if args.check:
-            check(repository_root, output_dir)
+            check(repository_root, output_dir, source_root)
         else:
-            build(repository_root, output_dir)
+            build(repository_root, output_dir, source_root)
     except (IndexBuildError, OSError, sqlite3.Error, json.JSONDecodeError) as exc:
         print(f"index build failed: {exc}", file=sys.stderr)
         return 1
