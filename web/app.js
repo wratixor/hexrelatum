@@ -440,7 +440,10 @@ window.addEventListener("resize", drawMap);
 
 async function start() {
   try {
-    const response = await fetch("../public/index.json", { cache: "no-store" });
+    const corpus = new URLSearchParams(location.search).get("corpus");
+    if (corpus && !/^[a-z0-9][a-z0-9-]*$/.test(corpus)) throw new Error("Недопустимый идентификатор корпуса");
+    const indexUrl = corpus ? `../${corpus}/public/index.json` : "../public/index.json";
+    const response = await fetch(indexUrl, { cache: "no-store" });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     state.index = await response.json();
     renderProvenance();

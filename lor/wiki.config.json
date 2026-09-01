@@ -1,0 +1,20 @@
+{
+  "axisSemanticsVersion": "geno-dice-six-axis-v0",
+  "axes": [
+    {
+      "id": "body-spirit",
+      "positive": "Тело",
+      "negative": "Дух"
+    },
+    {
+      "id": "technique-reaction",
+      "positive": "Техника",
+      "negative": "Реакция"
+    },
+    {
+      "id": "onslaught-composure",
+      "positive": "Натиск",
+      "negative": "Самообладание"
+    }
+  ]
+}
