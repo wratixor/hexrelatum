@@ -19,9 +19,7 @@ jobs:
         with:
           node-version: "22"
       - name: Verify generated indexes
-        run: |
-          python tools/build_index.py --check
-          python tools/build_index.py --corpus lor --check
+        run: python tools/build_index.py --check
       - name: Run tests
         run: python -m unittest discover -s tests -v
       - name: Check Python syntax

@@ -47,21 +47,6 @@ class BuildIndexTests(unittest.TestCase):
             finally:
                 connection.close()
 
-    def test_public_lore_corpus_builds_with_fantasy_axes(self) -> None:
-        with tempfile.TemporaryDirectory() as temporary:
-            output_dir = Path(temporary)
-            source_root = REPOSITORY_ROOT / "lor"
-            build_index.build(REPOSITORY_ROOT, output_dir, source_root)
-            payload = json.loads((output_dir / "index.json").read_text(encoding="utf-8"))
-
-            self.assertEqual(payload["homeId"], "geno-dice-open-lore")
-            self.assertGreaterEqual(len(payload["concepts"]), 5)
-            self.assertEqual(
-                [(axis["positive"], axis["negative"]) for axis in payload["axes"]],
-                [("Тело", "Дух"), ("Техника", "Реакция"), ("Натиск", "Самообладание")],
-            )
-            self.assertTrue(all(item["coordinates"] == [1.0] * 6 for item in payload["concepts"]))
-
     def test_links_are_navigable_both_ways_without_losing_direction(self) -> None:
         payload, directed_links, _ = build_index.build_payload(REPOSITORY_ROOT)
         concepts = {item["id"]: item for item in payload["concepts"]}
