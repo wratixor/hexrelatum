@@ -9,8 +9,8 @@ and knowledge.
 |---|---|
 | `web/**`, `tools/**`, `tests/**` | GNU AGPL-3.0-or-later |
 | `schema/**` | CC0-1.0 |
-| `wiki/**`, `lor/wiki/**`, `README.md`, `lor/README.md` | CC BY-SA 4.0 |
-| generated `public/index.json`, `public/index.sqlite3`, `lor/public/index.json` and `lor/public/index.sqlite3` | follows the licenses of the indexed content; bundled public content is CC BY-SA 4.0 |
+| `wiki/**`, `README.md` | CC BY-SA 4.0 |
+| generated `public/index.json` and `public/index.sqlite3` | follows the licenses of the indexed content; bundled demo content is CC BY-SA 4.0 |
 | `provenance.json`, `VERSION`, trivial configuration facts | CC0-1.0 |
 
 The complete license texts are stored in `LICENSE` and `LICENSES/`. SPDX
